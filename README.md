@@ -65,6 +65,7 @@ To run the web application:
 
 3. **Available Features**:
    - Dashboard: View library statistics and current status
+      ![Dashboard Example](docs/images/dashboard.png)
    - Books: Search, add, and manage the book catalog
    - Members: Manage library memberships and user information
    - Loans: Process borrowing, returns, and check due dates
