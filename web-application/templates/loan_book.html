@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Loan Book</title>
+    <link rel="stylesheet" href="https://cdn.tailwindcss.com">
+</head>
+<body>
+    <h2>Loan {{ book.title }}</h2>
+    <form method="POST">
+        <select name="member_id" required>
+            {% for member in members %}
+                <option value="{{ member.membership_number }}">{{ member.name }}</option>
+            {% endfor %}
+        </select>
+        <input name="loan_date" type="date" required>
+        <input name="due_date" type="date" required>
+        <button type="submit">Loan</button>
+    </form>
+    <a href="{{ url_for('main.books') }}">Back</a>
+</body>
+</html>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Loan</title>
+    <link rel="stylesheet" href="https://cdn.tailwindcss.com">
+</head>
+<body>
+    <h2>Edit Loan</h2>
+    <form method="POST">
+        <label>Due Date</label>
+        <input name="due_date" type="date" value="{{ loan.due_date }}" required>
+        <label>Return Date</label>
+        <input name="return_date" type="date" value="{{ loan.return_date or '' }}">
+        <button type="submit">Save</button>
+    </form>
+    <a href="{{ url_for('main.loans') }}">Back</a>
+</body>
+</html>

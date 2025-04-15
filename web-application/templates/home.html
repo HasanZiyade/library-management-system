@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Library Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                    },
+                },
+            },
+        };
+
+        // Check for dark mode
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+    </script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-12">
+            <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Library Management System</h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-2">Manage your library efficiently</p>
+        </header>
+        
+        <main class="max-w-4xl mx-auto">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
+                <h2 class="text-2xl font-semibold text-gray-800 dark:text-white mb-4">Welcome to the Library Management System</h2>
+                <p class="text-gray-600 dark:text-gray-400 mb-8">Please log in to access the system.</p>
+                <a href="{{ url_for('auth.login') }}" class="inline-block bg-primary hover:bg-primary/90 text-white font-bold py-2 px-6 rounded">
+                    Login
+                </a>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

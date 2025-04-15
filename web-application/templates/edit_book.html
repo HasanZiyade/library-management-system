@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Book</title>
+    <link rel="stylesheet" href="https://cdn.tailwindcss.com">
+</head>
+<body>
+    <h2>Edit Book</h2>
+    <form method="POST">
+        <input name="title" value="{{ book.title }}" required>
+        <input name="author" value="{{ book.author }}" required>
+        <input name="genre" value="{{ book.genre }}" required>
+        <input name="publication_year" type="number" value="{{ book.publication_year }}">
+        <input name="copies_available" type="number" value="{{ book.copies_available }}" required>
+        <button type="submit">Save</button>
+    </form>
+    <a href="{{ url_for('main.books') }}">Back</a>
+</body>
+</html>

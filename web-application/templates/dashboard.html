@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                        secondary: '#6366F1',
+                    },
+                },
+            },
+        };
+
+        // Check for dark mode
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+    </script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col">
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <aside class="w-full md:w-64 bg-gray-800 dark:bg-gray-950 text-white">
+            <div class="flex items-center justify-between p-4 md:hidden">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-book-open text-primary text-2xl"></i>
+                    <span class="text-xl font-bold">LibraryMS</span>
+                </div>
+                <button id="menu-toggle" class="text-white focus:outline-none">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+
+            <div id="sidebar-content" class="hidden md:block">
+                <div class="flex items-center space-x-3 p-4 border-b border-gray-700">
+                    <i class="fas fa-book-open text-primary text-2xl"></i>
+                    <div>
+                        <span class="text-xl font-bold">Library</span>
+                        <span class="block text-xs text-gray-400">Management System</span>
+                    </div>
+                </div>
+
+                <div class="p-4 border-b border-gray-700">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+                            <i class="fas fa-user text-white"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium">{{ username }}</div>
+                            <div class="text-xs text-gray-400">Administrator</div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="mt-4">
+                    <a href="{{ url_for('main.dashboard') }}" class="flex items-center px-4 py-3 text-white bg-gray-700 bg-opacity-50">
+                        <i class="fas fa-tachometer-alt w-6"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="{{ url_for('main.books') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:bg-opacity-25 hover:text-white">
+                        <i class="fas fa-book w-6"></i>
+                        <span>Books</span>
+                    </a>
+                    <a href="{{ url_for('main.members') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:bg-opacity-25 hover:text-white">
+                        <i class="fas fa-users w-6"></i>
+                        <span>Members</span>
+                    </a>
+                    <a href="{{ url_for('main.loans') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:bg-opacity-25 hover:text-white">
+                        <i class="fas fa-exchange-alt w-6"></i>
+                        <span>Loans</span>
+                    </a>
+                    <a href="{{ url_for('main.reports') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:bg-opacity-25 hover:text-white">
+                        <i class="fas fa-chart-bar w-6"></i>
+                        <span>Reports</span>
+                    </a>
+                </nav>
+
+                <div class="mt-auto border-t border-gray-700 p-4 absolute bottom-0 w-full md:w-64">
+                    <a href="{{ url_for('auth.logout') }}" class="flex items-center text-gray-300 hover:text-white">
+                        <i class="fas fa-sign-out-alt w-6"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 dark:bg-gray-900">
+            <div class="bg-white dark:bg-gray-800 shadow py-4 px-6 flex items-center justify-between">
+                <h1 class="text-xl font-semibold text-gray-800 dark:text-white">Dashboard</h1>
+
+                <div class="flex items-center space-x-4">
+                    <div class="relative hidden md:block">
+                        <input type="text" placeholder="Search..." class="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full pl-10 pr-4 py-1 focus:outline-none focus:ring-2 focus:ring-primary">
+                        <i class="fas fa-search absolute left-3 top-2 text-gray-500 dark:text-gray-400"></i>
+                    </div>
+
+                    <button class="relative p-1 text-gray-500 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white focus:outline-none">
+                        <i class="fas fa-bell"></i>
+                        <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </button>
+
+                    <div class="md:hidden">
+                        <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                            <i class="fas fa-user text-white text-sm"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 sm:p-6">
+                {% if error %}
+                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded shadow-md dark:bg-red-900/30 dark:text-red-300">
+                    <p class="font-bold">Error loading dashboard data:</p>
+                    <p>{{ error }}</p>
+                    <p class="mt-2 text-sm">This could be due to database connection issues or missing tables.</p>
+                    {% if error_details %}
+                    <div class="mt-3">
+                        <p class="font-semibold">Error details (for debugging):</p>
+                        <pre class="mt-1 text-xs bg-gray-50 dark:bg-gray-900 p-2 rounded overflow-x-auto">{{ error_details }}</pre>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Total Books</div>
+                                <div class="text-2xl font-bold mt-1 text-gray-800 dark:text-white">{{ book_count|default('0') }}</div>
+                                <div class="flex items-center mt-2">
+                                    <span class="text-gray-500 dark:text-gray-400 text-sm">Available for loan</span>
+                                </div>
+                            </div>
+                            <div class="bg-primary bg-opacity-10 p-3 rounded-lg">
+                                <i class="fas fa-book text-primary text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Total Members</div>
+                                <div class="text-2xl font-bold mt-1 text-gray-800 dark:text-white">{{ member_count|default('0') }}</div>
+                                <div class="flex items-center mt-2">
+                                    <span class="text-gray-500 dark:text-gray-400 text-sm">Registered in system</span>
+                                </div>
+                            </div>
+                            <div class="bg-indigo-500 bg-opacity-10 p-3 rounded-lg">
+                                <i class="fas fa-users text-indigo-500 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Active Loans</div>
+                                <div class="text-2xl font-bold mt-1 text-gray-800 dark:text-white">{{ active_loans|default('0') }}</div>
+                                <div class="flex items-center mt-2">
+                                    <span class="text-gray-500 dark:text-gray-400 text-sm">Books currently loaned</span>
+                                </div>
+                            </div>
+                            <div class="bg-yellow-500 bg-opacity-10 p-3 rounded-lg">
+                                <i class="fas fa-exchange-alt text-yellow-500 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-5">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Overdue</div>
+                                <div class="text-2xl font-bold mt-1 text-gray-800 dark:text-white">{{ overdue_loans|default('0') }}</div>
+                                <div class="flex items-center mt-2">
+                                    <span class="text-gray-500 dark:text-gray-400 text-sm">Past due date</span>
+                                </div>
+                            </div>
+                            <div class="bg-red-500 bg-opacity-10 p-3 rounded-lg">
+                                <i class="fas fa-clock text-red-500 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                        <h2 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Books by Genre</h2>
+                        <div class="relative h-64"> <canvas id="booksByGenreChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                        <h2 class="text-lg font-semibold text-gray-800 dark:text-white mb-3">Loan Status Distribution</h2>
+                        <div class="relative h-64 w-3/4 mx-auto"> <canvas id="loanStatusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+                        <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+                            <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Recent Activity</h2>
+                            <a href="{{ url_for('main.loans') }}" class="text-primary hover:underline text-sm">View all</a>
+                        </div>
+                        <div class="p-4">
+                            <ul class="space-y-4">
+                                {% if recent_activities %}
+                                    {% for activity in recent_activities %}
+                                        <li class="flex space-x-3">
+                                            <div class="flex-shrink-0 {% if activity.type == 'borrow' %}bg-green-100 dark:bg-green-900{% else %}bg-blue-100 dark:bg-blue-900{% endif %} rounded-full p-2">
+                                                <i class="{% if activity.type == 'borrow' %}fas fa-book-reader text-green-600 dark:text-green-400{% else %}fas fa-undo text-blue-600 dark:text-blue-400{% endif %}"></i>
+                                            </div>
+                                            <div>
+                                                <div class="text-sm font-medium text-gray-800 dark:text-white">
+                                                    {{ activity.member_name }} {% if activity.type == 'borrow' %}borrowed{% else %}returned{% endif %} "{{ activity.book_title }}"
+                                                </div>
+                                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                                    {% if activity.date is defined %}
+                                                        {% if activity.date is string %}
+                                                            {{ activity.date }}
+                                                        {% elif activity.date is none %}
+                                                            Unknown date
+                                                        {% else %}
+                                                            {{ activity.date.strftime('%b %d, %Y') }}
+                                                        {% endif %}
+                                                    {% else %}
+                                                        Date not available
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                {% else %}
+                                    <li class="flex space-x-3">
+                                        <div class="flex-shrink-0 bg-gray-100 dark:bg-gray-700 rounded-full p-2">
+                                            <i class="fas fa-info-circle text-gray-500 dark:text-gray-400"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-sm font-medium text-gray-800 dark:text-white">No recent activity found</div>
+                                            <div class="text-xs text-gray-500 dark:text-gray-400">New activities will appear here</div>
+                                        </div>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+                        <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+                            <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Popular Books</h2>
+                            <a href="{{ url_for('main.books') }}" class="text-primary hover:underline text-sm">View all</a>
+                        </div>
+                        <div class="p-4">
+                            <div class="space-y-4">
+                                {% if popular_books %}
+                                    {% for book, loan_count in popular_books %}
+                                        <div class="flex items-center space-x-4">
+                                            <div class="flex-shrink-0 h-16 w-12 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
+                                                <i class="fas fa-book text-gray-400 dark:text-gray-500"></i>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-medium text-gray-800 dark:text-white truncate">{{ book.title }}</p>
+                                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ book.author }}</p>
+                                                <div class="flex items-center mt-1">
+                                                    <div class="flex text-yellow-400">
+                                                        <i class="fas fa-star"></i>
+                                                        <i class="fas fa-star"></i>
+                                                        <i class="fas fa-star"></i>
+                                                        <i class="{% if loan_count > 3 %}fas{% else %}far{% endif %} fa-star"></i>
+                                                        <i class="{% if loan_count > 4 %}fas{% else %}far{% endif %} fa-star"></i>
+                                                    </div>
+                                                    <span class="text-xs ml-2 text-gray-500 dark:text-gray-400">{{ loan_count }} loan{% if loan_count != 1 %}s{% endif %}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-4 text-gray-500 dark:text-gray-400">
+                                        <i class="fas fa-book text-4xl mb-3"></i>
+                                        <p>No loan data available to determine popular books.</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
+                    <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+                        <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Recent Loans</h2>
+                        <a href="{{ url_for('main.loans') }}" class="text-primary hover:underline text-sm">View all</a>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Loan ID</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Book ID</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Member ID</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Loan Date</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Due Date</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                {% if recent_loans %}
+                                    {% for loan in recent_loans %}
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ loan.loan_number }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ loan.book_id }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ loan.member_id }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                {% if loan.loan_date is defined %}
+                                                    {% if loan.loan_date is string %}
+                                                        {{ loan.loan_date }}
+                                                    {% elif loan.loan_date is none %}
+                                                        N/A
+                                                    {% else %}
+                                                        {{ loan.loan_date.strftime('%b %d, %Y') }}
+                                                    {% endif %}
+                                                {% else %}
+                                                    Date not available
+                                                {% endif %}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                {% if loan.due_date is defined %}
+                                                    {% if loan.due_date is string %}
+                                                        {{ loan.due_date }}
+                                                    {% elif loan.due_date is none %}
+                                                        N/A
+                                                    {% else %}
+                                                        {{ loan.due_date.strftime('%b %d, %Y') }}
+                                                    {% endif %}
+                                                {% else %}
+                                                    Date not available
+                                                {% endif %}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                {% if loan.return_date %}
+                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">Returned</span>
+                                                {% else %}
+                                                    {% if loan.due_date is defined and loan.due_date is not string and loan.due_date is not none and loan.due_date < today %}
+                                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">Overdue</span>
+                                                    {% else %}
+                                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">Active</span>
+                                                    {% endif %}
+                                                {% endif %}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                <a href="#" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200 mr-3">View</a>
+                                                {% if not loan.return_date %}
+                                                    <a href="#" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200">Return</a>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">No recent loans found</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Quick Actions buttons removed as requested -->
+            </div>
+
+            <footer class="bg-white dark:bg-gray-800 px-6 py-4 mt-auto border-t dark:border-gray-700">
+                <div class="flex flex-col md:flex-row items-center justify-between">
+                    <div class="text-gray-600 dark:text-gray-400 text-sm">
+                        &copy; 2023 Library Management System. All rights reserved.
+                    </div>
+                    <div class="text-gray-500 dark:text-gray-400 text-xs mt-2 md:mt-0">
+                        Version 1.0.0
+                    </div>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        // Mobile menu toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuToggle = document.getElementById('menu-toggle');
+            const sidebarContent = document.getElementById('sidebar-content');
+
+            if (menuToggle && sidebarContent) { // Check if elements exist
+                menuToggle.addEventListener('click', function() {
+                    sidebarContent.classList.toggle('hidden');
+                });
+
+                // Close sidebar on window resize if in mobile view
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth >= 768) { // md breakpoint
+                        sidebarContent.classList.remove('hidden');
+                    } else {
+                        // If toggle button is not visible (desktop mode just switched to), ensure menu is hidden
+                         if (!menuToggle.offsetParent) {
+                            sidebarContent.classList.remove('hidden');
+                        }
+                        // Optional: keep it hidden if manually toggled off on mobile
+                         // else if (!sidebarContent.classList.contains('hidden')) {
+                           // sidebarContent.classList.add('hidden');
+                        // }
+                    }
+                });
+                 // Initial check in case starting in mobile view
+                if (window.innerWidth < 768) {
+                    sidebarContent.classList.add('hidden');
+                }
+            }
+
+
+            // --- Chart.js Initialization ---
+
+            // Example Data (Replace with your actual data passed from the server)
+            const booksByGenreData = {
+                labels: ['Fiction', 'Mystery', 'Science', 'History', 'Fantasy'],
+                datasets: [{
+                    label: '# of Books',
+                    data: [55, 30, 25, 15, 40], // Replace with actual counts like {{ genre_counts }}
+                    backgroundColor: [
+                        'rgba(93, 92, 222, 0.6)', // Primary color with opacity
+                        'rgba(99, 102, 241, 0.6)', // Secondary color
+                        'rgba(255, 159, 64, 0.6)',
+                        'rgba(75, 192, 192, 0.6)',
+                        'rgba(153, 102, 255, 0.6)',
+                    ],
+                    borderColor: [
+                         'rgba(93, 92, 222, 1)',
+                        'rgba(99, 102, 241, 1)',
+                        'rgba(255, 159, 64, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                    ],
+                    borderWidth: 1
+                }]
+            };
+
+            const loanStatusData = {
+                labels: ['Active', 'Overdue', 'Returned (This Month)'],
+                 // Use the counts from your stats cards or specific backend data
+                datasets: [{
+                    label: 'Loan Status',
+                    // Example: Use data passed from backend or default values
+                    data: [{{ active_loans|default('10') }}, {{ overdue_loans|default('3') }}, 150], // Replace 150 with actual returned count
+                    backgroundColor: [
+                        'rgba(34, 197, 94, 0.7)', // Green
+                        'rgba(239, 68, 68, 0.7)',  // Red
+                        'rgba(59, 130, 246, 0.7)'  // Blue
+                    ],
+                    hoverOffset: 4
+                }]
+            };
+
+            // Get Canvas Contexts
+            const genreCtx = document.getElementById('booksByGenreChart')?.getContext('2d');
+            const statusCtx = document.getElementById('loanStatusChart')?.getContext('2d');
+
+            // Create Charts if contexts exist
+            if (genreCtx) {
+                 new Chart(genreCtx, {
+                    type: 'bar',
+                    data: booksByGenreData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false, // Allows height to be controlled by container
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    color: document.documentElement.classList.contains('dark') ? '#cbd5e1' : '#6b7280' // Adapt ticks color for dark mode
+                                },
+                                grid: {
+                                    color: document.documentElement.classList.contains('dark') ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                                }
+                            },
+                             x: {
+                                ticks: {
+                                    color: document.documentElement.classList.contains('dark') ? '#cbd5e1' : '#6b7280'
+                                },
+                                 grid: {
+                                    display: false // Hide X-axis grid lines
+                                }
+                            }
+                        },
+                         plugins: {
+                             legend: {
+                                 display: false // Hide legend for cleaner look if only one dataset
+                            }
+                        }
+                    }
+                });
+            }
+
+             if (statusCtx) {
+                new Chart(statusCtx, {
+                    type: 'pie',
+                    data: loanStatusData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                     color: document.documentElement.classList.contains('dark') ? '#cbd5e1' : '#374151' // Adapt legend color
+                                }
+                            },
+                             tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed !== null) {
+                                             label += context.parsed;
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

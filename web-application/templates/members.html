@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Members - Library Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                        secondary: '#6366F1',
+                    },
+                },
+            },
+        };
+
+        // Check for dark mode
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+    </script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col">
+    <!-- Sidebar and Main content wrapper -->
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <!-- Sidebar -->
+        <aside class="w-full md:w-64 bg-gray-800 dark:bg-gray-950 text-white">
+            <!-- Mobile Header & Nav Toggle -->
+            <div class="flex items-center justify-between p-4 md:hidden">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-book-open text-primary text-2xl"></i>
+                    <span class="text-xl font-bold">LibraryMS</span>
+                </div>
+                <button id="menu-toggle" class="text-white focus:outline-none">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Sidebar Content -->
+            <div id="sidebar-content" class="hidden md:block">
+                <!-- Logo & Title -->
+                <div class="flex items-center space-x-3 p-4 border-b border-gray-700">
+                    <i class="fas fa-book-open text-primary text-2xl"></i>
+                    <div>
+                        <span class="text-xl font-bold">Library</span>
+                        <span class="block text-xs text-gray-400">Management System</span>
+                    </div>
+                </div>
+
+                <!-- User Info -->
+                <div class="p-4 border-b border-gray-700">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+                            <i class="fas fa-user text-white"></i>
+                        </div>
+                        <div>
+                            <div class="font-medium">{{ username }}</div>
+                            <div class="text-xs text-gray-400">Administrator</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <nav class="mt-4">
+                    <a href="{{ url_for('main.dashboard') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:bg-opacity-25 hover:text-white">
+                        <i class="fas fa-tachometer-alt w-6"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="{{ url_for('main.books') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:bg-opacity-25 hover:text-white">
+                        <i class="fas fa-book w-6"></i>
+                        <span>Books</span>
+                    </a>
+                    <a href="{{ url_for('main.members') }}" class="flex items-center px-4 py-3 text-white bg-gray-700 bg-opacity-50">
+                        <i class="fas fa-users w-6"></i>
+                        <span>Members</span>
+                    </a>
+                    <a href="{{ url_for('main.loans') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:bg-opacity-25 hover:text-white">
+                        <i class="fas fa-exchange-alt w-6"></i>
+                        <span>Loans</span>
+                    </a>
+                    <a href="{{ url_for('main.reports') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:bg-opacity-25 hover:text-white">
+                        <i class="fas fa-chart-bar w-6"></i>
+                        <span>Reports</span>
+                    </a>
+                </nav>
+
+                <!-- Logout -->
+                <div class="mt-auto border-t border-gray-700 p-4 absolute bottom-0 w-full md:w-64">
+                    <a href="{{ url_for('auth.logout') }}" class="flex items-center text-gray-300 hover:text-white">
+                        <i class="fas fa-sign-out-alt w-6"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 dark:bg-gray-900">
+            <!-- Top Bar -->
+            <div class="bg-white dark:bg-gray-800 shadow py-4 px-6 flex items-center justify-between">
+                <h1 class="text-xl font-semibold text-gray-800 dark:text-white">Member Management</h1>
+                
+                <div class="flex items-center space-x-4">
+                    <!-- Search -->
+                    <div class="relative hidden md:block">
+                        <input type="text" placeholder="Search members..." class="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full pl-10 pr-4 py-1 focus:outline-none focus:ring-2 focus:ring-primary">
+                        <i class="fas fa-search absolute left-3 top-2 text-gray-500 dark:text-gray-400"></i>
+                    </div>
+                    
+                    <!-- User Menu (mobile) -->
+                    <div class="md:hidden">
+                        <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                            <i class="fas fa-user text-white text-sm"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+ 
+                <!-- Filters and sorting -->
+                <form method="get" class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6 flex flex-col md:flex-row md:items-center space-y-3 md:space-y-0 md:space-x-4">
+                    <div class="flex-1">
+                        <label for="membership_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Membership Type</label>
+                        <input id="membership_type" name="membership_type" value="{{ request.args.get('membership_type', '') }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                    </div>
+                    <div class="flex-1">
+                        <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
+                        <input id="name" name="name" value="{{ request.args.get('name', '') }}" class="w-full rounded-md border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                    </div>
+                    <div class="flex-none pt-6">
+                        <button type="submit" class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-md">
+                            Apply Filters
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Add Member Button -->
+                <button id="openAddMemberModal" class="bg-primary text-white px-4 py-2 rounded mb-4">
+                    <i class="fas fa-user-plus mr-2"></i>Add Member
+                </button>
+
+                <!-- Add Member Modal -->
+                <div id="addMemberModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded shadow-lg w-full max-w-md">
+                        <h2 class="text-lg font-bold mb-4 text-gray-800 dark:text-white">Add New Member</h2>
+                        <form method="POST" action="{{ url_for('main.add_member') }}">
+                            <div class="mb-4">
+                                <label class="block text-gray-700 dark:text-gray-300 mb-1">Name</label>
+                                <input name="name" required class="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:text-white">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 dark:text-gray-300 mb-1">Contact Info</label>
+                                <input name="contact_info" class="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:text-white">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 dark:text-gray-300 mb-1">Membership Type</label>
+                                <input name="membership_type" required class="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:text-white">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 dark:text-gray-300 mb-1">Join Date</label>
+                                <input name="join_date" type="date" required class="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:text-white">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-gray-700 dark:text-gray-300 mb-1">Expiration Date</label>
+                                <input name="expiration_date" type="date" required class="w-full px-3 py-2 border rounded dark:bg-gray-700 dark:text-white">
+                            </div>
+                            <div class="flex justify-end">
+                                <button type="button" id="closeAddMemberModal" class="mr-2 px-4 py-2 rounded border">Cancel</button>
+                                <button type="submit" class="bg-primary text-white px-4 py-2 rounded">Add</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Members Table -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-700">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Member ID</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Contact</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Type</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Join Date</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Expiry Date</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                {% if members %}
+                                    {% for member in members %}
+                                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ member.membership_number }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <div class="flex-shrink-0 h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                                                        <i class="fas fa-user text-gray-500 dark:text-gray-400"></i>
+                                                    </div>
+                                                    <div class="ml-4">
+                                                        <div class="text-sm font-medium text-gray-900 dark:text-white">{{ member.name }}</div>
+                                                        <div class="text-sm text-gray-500 dark:text-gray-400">ID: {{ member.id_number }}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ member.contact_info }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ member.membership_type }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                {% if member.join_date is string %}
+                                                    {{ member.join_date }}
+                                                {% else %}
+                                                    {{ member.join_date.strftime('%b %d, %Y') if member.join_date else 'N/A' }}
+                                                {% endif %}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                {% if member.expiration_date is string %}
+                                                    {{ member.expiration_date }}
+                                                {% else %}
+                                                    {{ member.expiration_date.strftime('%b %d, %Y') if member.expiration_date else 'N/A' }}
+                                                {% endif %}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                                    Active
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <a href="{{ url_for('main.edit_member', membership_number=member.membership_number) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200 mr-3">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </a>
+                                                <a href="{{ url_for('main.loan_to_member', membership_number=member.membership_number) }}" class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-200">
+                                                    <i class="fas fa-share"></i> Loan
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="8" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                            No members found in the database.
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 flex items-center justify-between border-t border-gray-200 dark:border-gray-600 sm:px-6">
+                        <div class="flex-1 flex justify-between sm:hidden">
+                            <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                Previous
+                            </a>
+                            <a href="#" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                Next
+                            </a>
+                        </div>
+                        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                            <div>
+                                <p class="text-sm text-gray-700 dark:text-gray-300">
+                                    Showing
+                                    <span class="font-medium">1</span>
+                                    to
+                                    <span class="font-medium">{% if members %}{{ members|length }}{% else %}0{% endif %}</span>
+                                    of
+                                    <span class="font-medium">{% if members %}{{ members|length }}{% else %}0{% endif %}</span>
+                                    results
+                                </p>
+                            </div>
+                            <div>
+                                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                    <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                        <span class="sr-only">Previous</span>
+                                        <i class="fas fa-chevron-left h-5 w-5"></i>
+                                    </a>
+                                    <a href="#" aria-current="page" class="z-10 bg-primary border-primary text-white relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                        1
+                                    </a>
+                                    <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                        <span class="sr-only">Next</span>
+                                        <i class="fas fa-chevron-right h-5 w-5"></i>
+                                    </a>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="bg-white dark:bg-gray-800 px-6 py-4 mt-6 border-t dark:border-gray-700">
+                <div class="flex flex-col md:flex-row items-center justify-between">
+                    <div class="text-gray-600 dark:text-gray-400 text-sm">
+                        &copy; 2023 Library Management System. All rights reserved.
+                    </div>
+                    <div class="text-gray-500 dark:text-gray-400 text-xs mt-2 md:mt-0">
+                        Version 1.0.0
+                    </div>
+                </div>
+            </footer>
+        </main>
+    </div>
+
+    <script>
+        // Mobile menu toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuToggle = document.getElementById('menu-toggle');
+            const sidebarContent = document.getElementById('sidebar-content');
+
+            menuToggle.addEventListener('click', function() {
+                sidebarContent.classList.toggle('hidden');
+            });
+
+            // Close sidebar on window resize if in mobile view
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 768) { // md breakpoint
+                    sidebarContent.classList.remove('hidden');
+                } else {
+                    sidebarContent.classList.add('hidden');
+                }
+            });
+        });
+
+        document.getElementById('openAddMemberModal').onclick = function() {
+            document.getElementById('addMemberModal').classList.remove('hidden');
+        };
+        document.getElementById('closeAddMemberModal').onclick = function() {
+            document.getElementById('addMemberModal').classList.add('hidden');
+        };
+    </script>
+</body>
+</html>

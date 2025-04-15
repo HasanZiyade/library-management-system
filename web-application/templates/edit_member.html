@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Member</title>
+    <link rel="stylesheet" href="https://cdn.tailwindcss.com">
+</head>
+<body>
+    <h2>Edit Member</h2>
+    <form method="POST">
+        <input name="name" value="{{ member.name }}" required>
+        <input name="contact_info" value="{{ member.contact_info }}">
+        <input name="membership_type" value="{{ member.membership_type }}" required>
+        <input name="join_date" type="date" value="{{ member.join_date }}">
+        <input name="expiration_date" type="date" value="{{ member.expiration_date }}">
+        <button type="submit">Save</button>
+    </form>
+    <a href="{{ url_for('main.members') }}">Back</a>
+</body>
+</html>
