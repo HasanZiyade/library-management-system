@@ -43,6 +43,7 @@ To set up and work with the database:
 3. **Normalizing the Database**:
    - After importing data and creating the database, run the scripts from `database/schema/normalization/` to convert the schema to BCNF
    - These scripts will create new normalized tables and migrate data appropriately
+        ![ER Diagram After Normalization](docs/images/ER_diagram_after_normalization.png)
 
 4. **Running Queries**:
    - For common read operations, use the scripts in `database/queries/selects/`
